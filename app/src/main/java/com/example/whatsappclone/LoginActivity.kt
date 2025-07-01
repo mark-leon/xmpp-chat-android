@@ -64,7 +64,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         if (isFinishing) {
-            XMPPConnectionManager.disconnect()
+//            XMPPConnectionManager.disconnect()
         }
     }
 }

@@ -20,7 +20,7 @@ object XMPPConnectionManager {
             // Configure connection
             val config = XMPPTCPConnectionConfiguration.builder()
                 .setXmppDomain(server)
-                .setHost("10.0.2.2")
+                .setHost("10.123.162.8")
                 .setPort(5222)
                 .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
                 .build()
