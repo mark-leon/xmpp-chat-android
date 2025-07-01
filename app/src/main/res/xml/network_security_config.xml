@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config>
+        <domain includeSubdomains="true">localhost</domain>
+        <trust-anchors>
+<!--            <certificates src="@raw/your_server_ca"/>-->
+            <!-- You can also use <certificates src="system" /> to trust system CAs -->
+        </trust-anchors>
+    </domain-config>
+</network-security-config>
