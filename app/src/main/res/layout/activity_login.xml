@@ -1,47 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    tools:context=".LoginActivity">
+    android:padding="24dp"
+    android:gravity="center">
 
-    <EditText
-        android:id="@+id/etUsername"
+    <!-- App Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="WhatsApp Clone"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="32dp" />
+
+    <!-- Backend Status -->
+    <TextView
+        android:id="@+id/tvBackendStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Username"
-        android:inputType="text"/>
+        android:text="Backend: Checking connection..."
+        android:textSize="14sp"
+        android:textAlignment="center"
+        android:padding="8dp"
+        android:background="#F0F0F0"
+        android:layout_marginBottom="24dp" />
 
-    <EditText
-        android:id="@+id/etPassword"
+    <!-- Server Input -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Password"
-        android:inputType="textPassword"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginBottom="16dp">
 
-    <EditText
-        android:id="@+id/etServer"
+        <EditText
+            android:id="@+id/etServer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Server (e.g., localhost)"
+            android:inputType="text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Username Input -->
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Server (e.g., xmpp.example.com)"
-        android:inputType="text"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginBottom="16dp">
 
+        <EditText
+            android:id="@+id/etUsername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Username"
+            android:inputType="text" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Password Input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp">
+
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            android:inputType="textPassword" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Login Button -->
     <Button
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Login"
-        android:layout_marginTop="16dp"/>
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp" />
 
+    <!-- Test Backend Button -->
+    <Button
+        android:id="@+id/btnTestBackend"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test Backend Connection"
+        android:textSize="14sp"
+        android:padding="12dp"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Progress Bar -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="16dp"
-        android:visibility="gone"/>
+        android:visibility="gone" />
+
+    <!-- Instructions -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Make sure your Node.js backend is running on localhost:8800"
+        android:textSize="12sp"
+        android:textAlignment="center"
+        android:textColor="@android:color/darker_gray"
+        android:layout_marginTop="24dp" />
+
 </LinearLayout>

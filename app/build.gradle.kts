@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 
@@ -66,6 +67,16 @@ dependencies {
     implementation("org.igniterealtime.smack:smack-extensions:4.4.6") {
         exclude(group = "xpp3")
     }
+
+    // Network Dependencies
+    implementation ("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // Firebase Dependencies
+    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    implementation ("com.google.firebase:firebase-messaging")
+    implementation ("com.google.firebase:firebase-analytics")
+
     // Glide (Image Loading)
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
