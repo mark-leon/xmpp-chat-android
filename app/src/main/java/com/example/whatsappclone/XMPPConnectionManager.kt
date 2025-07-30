@@ -1,25 +1,22 @@
 package com.example.whatsappclone
 
-import android.content.Context
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.tasks.await
 import org.jivesoftware.smack.*
 import org.jivesoftware.smack.chat2.*
 import org.jivesoftware.smack.tcp.*
-import org.jivesoftware.smack.roster.*
-import org.jivesoftware.smack.packet.*
-import org.jxmpp.jid.*
+
+import org.jivesoftware.smackx.push_notifications.PushNotificationsManager
 import org.jxmpp.jid.impl.*
+import org.jxmpp.jid.parts.Resourcepart
 import org.jxmpp.stringprep.*
 
 object XMPPConnectionManager {
     private var connection: AbstractXMPPConnection? = null
     private var chatManager: ChatManager? = null
-    private var context: Context? = null
 
     fun getConnection(): AbstractXMPPConnection? = connection
-
-    fun setContext(ctx: Context) {
-        context = ctx
-    }
+    fun getChatManager(): ChatManager? = chatManager
 
     suspend fun connect(server: String, username: String, password: String): Boolean {
         return try {
@@ -36,14 +33,9 @@ object XMPPConnectionManager {
             connection!!.connect()
             connection!!.login(username, password)
 
-            // Initialize chat manager
             chatManager = ChatManager.getInstanceFor(connection)
 
-            // Register for push notifications
-            val userJID = "$username@$server"
-            context?.let { ctx ->
-                FCMTokenManager.initializeFCM(ctx, userJID)
-            }
+            registerPushNotifications()
 
             true
         } catch (e: Exception) {
@@ -52,7 +44,35 @@ object XMPPConnectionManager {
         }
     }
 
+    suspend fun registerPushNotifications() {
+        try {
+            // Assuming 'connection' is an initialized XMPPConnection object
+            val pushManager = PushNotificationsManager.getInstanceFor(connection)
+            val node = JidCreate.bareFrom("pubsub.localhost/push")
+            val fcmToken = FirebaseMessaging.getInstance().token.await()
+            println("fcc,${fcmToken}")
+
+            // Corrected: Create a HashMap instead of a Kotlin Map
+            val publishOptions = HashMap<String, String>()
+            publishOptions["device_id"] = fcmToken
+            publishOptions["service"] = "fcm"
+
+            pushManager.enable(node, Resourcepart.from("mobile").toString(), publishOptions)
+            println("Push notification registered with node: ${node.asBareJid()}")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     fun disconnect() {
+        try {
+            // Disable push notifications before disconnecting
+            val pushManager = PushNotificationsManager.getInstanceFor(connection)
+            val node = JidCreate.bareFrom("pubsub.localhost/push")
+//            pushManager.disable(node)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         connection?.disconnect()
         connection = null
         chatManager = null
@@ -81,6 +101,4 @@ object XMPPConnectionManager {
             }
         }
     }
-
-    fun getChatManager(): ChatManager? = chatManager
 }
