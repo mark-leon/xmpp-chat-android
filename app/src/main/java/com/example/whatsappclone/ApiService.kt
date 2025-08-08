@@ -23,7 +23,7 @@ interface ApiService {
     suspend fun registerDevice(@Body request: RegisterDeviceRequest): Response<RegisterDeviceResponse>
 
     companion object {
-        private const val BASE_URL = "http://10.102.126.8:8080/"
+        private const val BASE_URL = "http://10.102.126.8:8080/push"
 
         val instance: ApiService by lazy {
             Retrofit.Builder()
