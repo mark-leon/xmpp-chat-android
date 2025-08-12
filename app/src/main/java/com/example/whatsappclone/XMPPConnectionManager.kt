@@ -1,14 +1,15 @@
 package com.example.whatsappclone
 
-import com.google.firebase.messaging.FirebaseMessaging
-import kotlinx.coroutines.tasks.await
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import org.jivesoftware.smack.*
 import org.jivesoftware.smack.chat2.*
 import org.jivesoftware.smack.tcp.*
-
-import org.jivesoftware.smackx.push_notifications.PushNotificationsManager
+import org.jivesoftware.smack.packet.*
+import org.jxmpp.jid.*
 import org.jxmpp.jid.impl.*
-import org.jxmpp.jid.parts.Resourcepart
 import org.jxmpp.stringprep.*
 
 object XMPPConnectionManager {
@@ -16,14 +17,13 @@ object XMPPConnectionManager {
     private var chatManager: ChatManager? = null
 
     fun getConnection(): AbstractXMPPConnection? = connection
-    fun getChatManager(): ChatManager? = chatManager
 
-    suspend fun connect(server: String, username: String, password: String): Boolean {
+    suspend fun connect(server: String?, username: String?, password: String?): Boolean {
         return try {
             // Configure connection
             val config = XMPPTCPConnectionConfiguration.builder()
                 .setXmppDomain(server)
-                .setHost("10.102.126.8")
+                .setHost("10.230.214.8")
                 .setPort(5222)
                 .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
                 .build()
@@ -33,9 +33,11 @@ object XMPPConnectionManager {
             connection!!.connect()
             connection!!.login(username, password)
 
-            chatManager = ChatManager.getInstanceFor(connection)
+            // Enable automatic reconnection
+            ReconnectionManager.getInstanceFor(connection).enableAutomaticReconnection()
 
-            registerPushNotifications()
+            // Initialize chat manager
+            chatManager = ChatManager.getInstanceFor(connection)
 
             true
         } catch (e: Exception) {
@@ -44,35 +46,7 @@ object XMPPConnectionManager {
         }
     }
 
-    suspend fun registerPushNotifications() {
-        try {
-            // Assuming 'connection' is an initialized XMPPConnection object
-            val pushManager = PushNotificationsManager.getInstanceFor(connection)
-            val node = JidCreate.bareFrom("pubsub.localhost/push")
-            val fcmToken = FirebaseMessaging.getInstance().token.await()
-            println("fcc,${fcmToken}")
-
-            // Corrected: Create a HashMap instead of a Kotlin Map
-            val publishOptions = HashMap<String, String>()
-            publishOptions["device_id"] = fcmToken
-            publishOptions["service"] = "fcm"
-
-            pushManager.enable(node, Resourcepart.from("mobile").toString(), publishOptions)
-            println("Push notification registered with node: ${node.asBareJid()}")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
     fun disconnect() {
-        try {
-            // Disable push notifications before disconnecting
-            val pushManager = PushNotificationsManager.getInstanceFor(connection)
-            val node = JidCreate.bareFrom("pubsub.localhost/push")
-//            pushManager.disable(node)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
         connection?.disconnect()
         connection = null
         chatManager = null
@@ -100,5 +74,70 @@ object XMPPConnectionManager {
                 listener(sender, body)
             }
         }
+    }
+
+    fun getChatManager(): ChatManager? = chatManager
+
+    // Helper to store credentials securely (using EncryptedSharedPreferences)
+    fun storeCredentials(context: Context, server: String, username: String, password: String) {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        val prefs: SharedPreferences = EncryptedSharedPreferences.create(
+            context,
+            "xmpp_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+
+        prefs.edit().apply {
+            putString("server", server)
+            putString("username", username)
+            putString("password", password)
+            apply()
+        }
+    }
+
+    // Helper to get credentials
+    fun getCredentials(context: Context): Triple<String?, String?, String?>? {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        val prefs: SharedPreferences = EncryptedSharedPreferences.create(
+            context,
+            "xmpp_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+
+        val server = prefs.getString("server", null)
+        val username = prefs.getString("username", null)
+        val password = prefs.getString("password", null)
+
+        if (server != null && username != null && password != null) {
+            return Triple(server, username, password)
+        }
+        return null
+    }
+
+    // Helper to clear credentials
+    fun clearCredentials(context: Context) {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        val prefs: SharedPreferences = EncryptedSharedPreferences.create(
+            context,
+            "xmpp_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+
+        prefs.edit().clear().apply()
     }
 }

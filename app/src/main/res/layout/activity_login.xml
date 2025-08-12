@@ -16,17 +16,8 @@
         android:textColor="@android:color/black"
         android:layout_marginBottom="32dp" />
 
-    <!-- Backend Status -->
-    <TextView
-        android:id="@+id/tvBackendStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Backend: Checking connection..."
-        android:textSize="14sp"
-        android:textAlignment="center"
-        android:padding="8dp"
-        android:background="#F0F0F0"
-        android:layout_marginBottom="24dp" />
+
+
 
     <!-- Server Input -->
     <com.google.android.material.textfield.TextInputLayout
@@ -82,33 +73,13 @@
         android:textSize="16sp"
         android:padding="16dp"
         android:layout_marginBottom="16dp" />
-
-    <!-- Test Backend Button -->
-    <Button
-        android:id="@+id/btnTestBackend"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Test Backend Connection"
-        android:textSize="14sp"
-        android:padding="12dp"
-        style="?android:attr/buttonBarButtonStyle"
-        android:layout_marginBottom="16dp" />
-
-    <!-- Progress Bar -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone" />
 
-    <!-- Instructions -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Make sure your Node.js backend is running on localhost:8800"
-        android:textSize="12sp"
-        android:textAlignment="center"
-        android:textColor="@android:color/darker_gray"
-        android:layout_marginTop="24dp" />
+
+
 
 </LinearLayout>

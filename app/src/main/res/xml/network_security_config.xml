@@ -3,6 +3,7 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain> <!-- For emulator -->
-        <domain includeSubdomains="true">10.102.126.8</domain> <!-- Your local IP -->
+        <domain includeSubdomains="true">10.102.126.8</domain>
+        <domain includeSubdomains="true">10.230.214.8</domain><!-- Your local IP -->
     </domain-config>
 </network-security-config>

@@ -1,53 +1,74 @@
 package com.example.whatsappclone
 
+
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    override fun onNewToken(token: String) {
+        // Token refreshed, send it to your server if needed
+        // Example: MyServerApi.sendFcmToken(token)
+    }
+
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        super.onMessageReceived(remoteMessage)
-        val title = remoteMessage.notification?.title ?: "New Message"
-        val body = remoteMessage.notification?.body ?: "You have a new message"
-        val sender = remoteMessage.data["sender"] ?: "Unknown"
+        if (remoteMessage.data.isNotEmpty()) {
+            val from = remoteMessage.data["from"]?.substringBefore("/") ?: ""  // Handle full/bare JID
+            val body = remoteMessage.data["body"] ?: ""
 
-        // Display notification
-        val channelId = "xmpp_push_channel"
-        val notificationManager = getSystemService(NotificationManager::class.java)
+            if (from.isNotEmpty() && body.isNotEmpty()) {
+                showNotification(from, body)
+            }
+        }
+    }
 
+    private fun showNotification(from: String, body: String) {
+        val channelId = "chat_channel"
+
+        // Create notification channel if Android O or higher
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "XMPP Push Notifications",
-                NotificationManager.IMPORTANCE_DEFAULT
+                "Chat Notifications",
+                NotificationManager.IMPORTANCE_HIGH
             )
-            notificationManager.createNotificationChannel(channel)
+            val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
         }
 
+        // Intent to open ChatActivity when notification is tapped
+        val intent = Intent(this, ChatActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("sender", from) // Bare JID expected
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        // Build the notification
         val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(title)
-            .setContentText("$sender: $body")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setSmallIcon(R.drawable.ic_notification)  // Replace with your icon
+            .setContentTitle("Message from ${from.substringBefore("@")}")
+            .setContentText(body)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
-    }
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        // Re-register with XMPP server if token changes
-        CoroutineScope(Dispatchers.IO).launch {
-            if (XMPPConnectionManager.isConnected()) {
-                XMPPConnectionManager.registerPushNotifications()
-            }
-        }
+        // Show the notification
+        NotificationManagerCompat.from(this)
+            .notify(System.currentTimeMillis().toInt(), notification)
     }
 }

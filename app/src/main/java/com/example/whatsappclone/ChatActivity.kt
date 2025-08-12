@@ -1,4 +1,10 @@
 package com.example.whatsappclone
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
@@ -7,15 +13,20 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jivesoftware.smack.chat2.ChatManager
 import com.example.whatsappclone.model.ChatMessage
-import android.widget.Toast
 
 class ChatActivity : AppCompatActivity() {
 
@@ -28,7 +39,8 @@ class ChatActivity : AppCompatActivity() {
 
     private val messages = mutableListOf<ChatMessage>()
     private var currentRecipient: String? = null
-    private val chatManager: ChatManager? = XMPPConnectionManager.getChatManager()
+    private var chatManager: ChatManager? = XMPPConnectionManager.getChatManager()
+    private lateinit var recipients: List<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,9 +49,39 @@ class ChatActivity : AppCompatActivity() {
         initializeViews()
         setupRecyclerView()
         setupRecipientSpinner()
-        setupConnectionStatus()
-        setupMessageListener()
-        setupSendButton()
+
+        // Check connection and reconnect if necessary
+        if (!XMPPConnectionManager.isConnected()) {
+            val creds = XMPPConnectionManager.getCredentials(this)
+            if (creds == null) {
+                Toast.makeText(this, "No credentials found. Redirecting to login.", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+                return
+            }
+            val (server, username, password) = creds
+            CoroutineScope(Dispatchers.IO).launch {
+                val success = XMPPConnectionManager.connect(server, username, password)
+                withContext(Dispatchers.Main) {
+                    if (success) {
+                        chatManager = XMPPConnectionManager.getChatManager()
+                        setupConnectionStatus()
+                        setupMessageListener()
+                        setupSendButton()
+                        handleIntentExtras()
+                    } else {
+                        Toast.makeText(this@ChatActivity, "Failed to reconnect. Redirecting to login.", Toast.LENGTH_SHORT).show()
+                        startActivity(Intent(this@ChatActivity, LoginActivity::class.java))
+                        finish()
+                    }
+                }
+            }
+        } else {
+            setupConnectionStatus()
+            setupMessageListener()
+            setupSendButton()
+            handleIntentExtras()
+        }
     }
 
     private fun initializeViews() {
@@ -59,15 +101,12 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun setupRecipientSpinner() {
-        // Get current user's domain
-        val domain =  "localhost"
-
-        // Create list of available recipients
+        val domain = "localhost"
         val currentUser = XMPPConnectionManager.getConnection()?.user?.asEntityBareJidString() ?: ""
-        val recipients = listOf(
+        recipients = listOf(
             "leion@$domain",
             "rafin@$domain"
-        ).filter { it != currentUser } // Exclude current user
+        ).filter { it != currentUser }
 
         val adapter = ArrayAdapter(
             this,
@@ -80,7 +119,7 @@ class ChatActivity : AppCompatActivity() {
         spinnerRecipients.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 currentRecipient = recipients[position]
-                // Clear messages when changing recipient
+                // Clear messages when changing recipient (or load history if implemented)
                 messages.clear()
                 messagesAdapter.notifyDataSetChanged()
             }
@@ -90,7 +129,6 @@ class ChatActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun setupConnectionStatus() {
         tvStatus.text = if (XMPPConnectionManager.isConnected()) {
@@ -103,13 +141,14 @@ class ChatActivity : AppCompatActivity() {
     private fun setupMessageListener() {
         XMPPConnectionManager.setMessageListener { from, message ->
             runOnUiThread {
-                // Only show messages from the current recipient
                 if (from == currentRecipient) {
                     addMessage(ChatMessage(
                         sender = from.substringBefore("@"),
                         message = message,
                         isOutgoing = false
                     ))
+                } else {
+                    // Optionally handle messages from other recipients (e.g., show in-app notification)
                 }
             }
         }
@@ -155,10 +194,21 @@ class ChatActivity : AppCompatActivity() {
         rvMessages.scrollToPosition(messages.size - 1)
     }
 
+    private fun handleIntentExtras() {
+        val sender = intent.getStringExtra("sender")
+        if (sender != null) {
+            val pos = recipients.indexOf(sender)
+            if (pos >= 0) {
+                spinnerRecipients.setSelection(pos)
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         if (isFinishing) {
-//            XMPPConnectionManager.disconnect()
+            // Optionally disconnect
+            // XMPPConnectionManager.disconnect()
         }
     }
 }
