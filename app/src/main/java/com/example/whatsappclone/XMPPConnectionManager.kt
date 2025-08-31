@@ -2,6 +2,7 @@ package com.example.whatsappclone
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import org.jivesoftware.smack.*
@@ -11,6 +12,21 @@ import org.jivesoftware.smack.packet.*
 import org.jxmpp.jid.*
 import org.jxmpp.jid.impl.*
 import org.jxmpp.stringprep.*
+
+
+import org.jivesoftware.smack.AbstractXMPPConnection
+import org.jivesoftware.smack.packet.IQ
+import org.jivesoftware.smack.packet.StandardExtensionElement
+import org.jivesoftware.smackx.iqregister.packet.Registration
+import org.jivesoftware.smackx.sid.element.OriginIdElement
+import org.jxmpp.jid.impl.JidCreate
+import org.jivesoftware.smack.packet.SimpleIQ
+import org.jivesoftware.smackx.push_notifications.PushNotificationsManager
+import org.jivesoftware.smackx.xdata.packet.DataForm
+import org.jivesoftware.smackx.xdata.FormField
+import org.jxmpp.jid.EntityBareJid
+import com.google.firebase.messaging.FirebaseMessaging
+
 
 object XMPPConnectionManager {
     private var connection: AbstractXMPPConnection? = null
@@ -23,7 +39,7 @@ object XMPPConnectionManager {
             // Configure connection
             val config = XMPPTCPConnectionConfiguration.builder()
                 .setXmppDomain(server)
-                .setHost("10.241.250.8")
+                .setHost("10.212.78.8")
                 .setPort(5222)
                 .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
                 .build()
@@ -45,6 +61,8 @@ object XMPPConnectionManager {
             false
         }
     }
+
+
 
     fun disconnect() {
         connection?.disconnect()
@@ -140,4 +158,20 @@ object XMPPConnectionManager {
 
         prefs.edit().clear().apply()
     }
+
+
+//    private suspend fun uploadFcmToken(connection: AbstractXMPPConnection) {
+//        val prefs = MyApp.instance.getSharedPreferences("prefs", Context.MODE_PRIVATE)
+//        val token = prefs.getString("fcm_token", null) ?: return
+//
+//        val ext = StandardExtensionElement.builder("register", "https://fcm.googleapis.com/fcm")
+//            .addElement("token", token)
+//            .build()
+//
+//        val iq = SimpleIQ("register", "https://fcm.googleapis.com/fcm")
+//        iq.type = IQ.Type.set
+//        iq.addExtension(ext)
+//
+//
+//    }
 }

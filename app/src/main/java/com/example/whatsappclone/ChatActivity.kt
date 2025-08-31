@@ -49,6 +49,17 @@ class ChatActivity : AppCompatActivity() {
         initializeViews()
         setupRecyclerView()
         setupRecipientSpinner()
+        // In onCreate, after setupRecipientSpinner()
+        val recipientFromNotification = intent.getStringExtra("recipient")
+        if (recipientFromNotification != null) {
+            val adapter = spinnerRecipients.adapter as ArrayAdapter<String>
+            val position = adapter.getPosition(recipientFromNotification)
+            if (position >= 0) {
+                spinnerRecipients.setSelection(position)
+            } else {
+                Toast.makeText(this, "Recipient not found", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         // Check connection and reconnect if necessary
         if (!XMPPConnectionManager.isConnected()) {
